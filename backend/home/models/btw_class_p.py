@@ -2,6 +2,7 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
 from safe_driver.image_functions import signature_image_folder, map_image_folder
+from safe_driver.utils import BTWClassManager, BTWClassMixin
 
 NUMBER_CHOICES = (
     (1, "1"),
@@ -13,10 +14,10 @@ NUMBER_CHOICES = (
 )
 
 
-# student BTW Bus
-class BTWBus(models.Model):
+# student BTW Class P
+class BTWClassP(models.Model):
     test = models.ForeignKey('safe_driver.StudentTest', on_delete=models.CASCADE, null=False,
-                             related_name='btw_test_bus')
+                             related_name='btw_test_class_p')
 
     date = models.DateField(null=True, blank=True, default=None, verbose_name='Date')
     start_time = models.TimeField(null=True, blank=True, default=None, verbose_name='Start Time')
@@ -46,14 +47,14 @@ class BTWBus(models.Model):
 
     class Meta:
         ordering = ('-created',)
-        verbose_name = "Behind The Wheel Bus"
-        verbose_name_plural = "Behind The Wheel Bus"
+        verbose_name = "Behind The Wheel Class P"
+        verbose_name_plural = "Behind The Wheel Class P"
 
 
-# 1. Cab safety Bus
-class BTWCabSafetyBus(models.Model):
-    btw = models.OneToOneField('safe_driver.BTWBus', on_delete=models.CASCADE, null=False,
-                               related_name='btw_cab_safety_bus')
+# 1. Cab safety Class P
+class BTWCabSafetyClassP(BTWClassMixin, models.Model):
+    btw = models.OneToOneField('safe_driver.BTWClassP', on_delete=models.CASCADE, null=False,
+                               related_name='btw_cab_safety_class_p')
 
     seat_belt = models.IntegerField(_('Seat Belt'), choices=NUMBER_CHOICES, default=0, )
     cab_distractions = models.IntegerField(_('Cab distractions'), choices=NUMBER_CHOICES, default=0, )
@@ -67,30 +68,15 @@ class BTWCabSafetyBus(models.Model):
     def __unicode__(self):
         return '%s' % self.pk
 
-    @property
-    def possible_points(self):
-        points = 5 * 4
-        return points
-
-    @property
-    def points_received(self):
-        points = self.seat_belt + self.cab_distractions + self.cab_obstructions + self.cab_chemicals
-        return points
-
-    @property
-    def percent_effective(self):
-        percent = (self.points_received / self.possible_points) * 100
-        return '%s' % percent
-
     class Meta:
         ordering = ('-created',)
-        verbose_name = "BTW Cab Safety Bus"
+        verbose_name = "BTW Cab Safety Class P"
 
 
-# 2. Start Engine Bus
-class BTWStartEngineBus(models.Model):
-    btw = models.OneToOneField('safe_driver.BTWBus', on_delete=models.CASCADE, null=False,
-                               related_name='btw_start_engine_bus')
+# 2. Start Engine Class P
+class BTWStartEngineClassP(BTWClassMixin, models.Model):
+    btw = models.OneToOneField('safe_driver.BTWClassP', on_delete=models.CASCADE, null=False,
+                               related_name='btw_start_engine_class_p')
 
     park_brake_applied = models.IntegerField(_('Park Brake Applied'), choices=NUMBER_CHOICES, default=0, )
     trans_in_neutral = models.IntegerField(_('Trans in Neutral'), choices=NUMBER_CHOICES, default=0, )
@@ -103,30 +89,15 @@ class BTWStartEngineBus(models.Model):
     def __unicode__(self):
         return '%s' % self.pk
 
-    @property
-    def possible_points(self):
-        points = 5 * 4
-        return points
-
-    @property
-    def points_received(self):
-        points = self.park_brake_applied + self.trans_in_neutral + self.uses_starter_properly
-        return points
-
-    @property
-    def percent_effective(self):
-        percent = (self.points_received / self.possible_points) * 100
-        return '%s' % percent
-
     class Meta:
         ordering = ('-created',)
-        verbose_name = "BTW Start Engine Bus"
+        verbose_name = "BTW Start Engine Class P"
 
 
-# 3. Engine Operation Bus
-class BTWEngineOperationBus(models.Model):
-    btw = models.OneToOneField('safe_driver.BTWBus', on_delete=models.CASCADE, null=False,
-                               related_name='btw_engine_operation_bus')
+# 3. Engine Operation Class P
+class BTWEngineOperationClassP(BTWClassMixin, models.Model):
+    btw = models.OneToOneField('safe_driver.BTWClassP', on_delete=models.CASCADE, null=False,
+                               related_name='btw_engine_operation_class_p')
 
     lugging = models.IntegerField(_('Lugging'), choices=NUMBER_CHOICES, default=0, )
     check_gauges = models.IntegerField(_('Check Gauges'), choices=NUMBER_CHOICES, default=0, )
@@ -139,30 +110,15 @@ class BTWEngineOperationBus(models.Model):
     def __unicode__(self):
         return '%s' % self.pk
 
-    @property
-    def possible_points(self):
-        points = 5 * 3
-        return points
-
-    @property
-    def points_received(self):
-        points = self.lugging + self.check_gauges + self.start_off_smoothly
-        return points
-
-    @property
-    def percent_effective(self):
-        percent = (self.points_received / self.possible_points) * 100
-        return '%s' % percent
-
     class Meta:
         ordering = ('-created',)
-        verbose_name = "BTW Engine Operation Bus"
+        verbose_name = "BTW Engine Operation Class P"
 
 
-# 4. Use of Brakes and Stopping Bus
-class BTWBrakesAndStoppingsBus(models.Model):
-    btw = models.OneToOneField('safe_driver.BTWBus', on_delete=models.CASCADE, null=False,
-                               related_name='btw_brakes_and_stopping_bus')
+# 4. Use of Brakes and Stopping Class P
+class BTWBrakesAndStoppingsClassP(BTWClassMixin, models.Model):
+    btw = models.OneToOneField('safe_driver.BTWClassP', on_delete=models.CASCADE, null=False,
+                               related_name='btw_brakes_and_stopping_class_p')
 
     checks_rear_or_gives_warning = models.IntegerField(_('Checks rear/gives warning'), choices=NUMBER_CHOICES,
                                                        default=0, )
@@ -182,32 +138,15 @@ class BTWBrakesAndStoppingsBus(models.Model):
     def __unicode__(self):
         return '%s' % self.pk
 
-    @property
-    def possible_points(self):
-        points = 5 * 9
-        return points
-
-    @property
-    def points_received(self):
-        points = self.checks_rear_or_gives_warning + self.full_stop_or_smooth + self.does_not_fan + \
-                 self.down_shifts + self.uses_foot_brake_only + self.hand_valve_use + \
-                 self.does_not_roll_back + self.engine_assist + self.avoids_sudden_stops
-        return points
-
-    @property
-    def percent_effective(self):
-        percent = (self.points_received / self.possible_points) * 100
-        return '%s' % percent
-
     class Meta:
         ordering = ('-created',)
-        verbose_name = "BTW - Use of Brakes and Stopping Bus"
+        verbose_name = "BTW - Use of Brakes and Stopping Class P"
 
 
-# 5. Passenger Safety
-class BTWPassengerSafetyBus(models.Model):
-    btw = models.OneToOneField('safe_driver.BTWBus', on_delete=models.CASCADE, null=False,
-                               related_name='btw_passenger_safety_bus')
+# 5. Passenger Safety Class P
+class BTWPassengerSafetyClassP(BTWClassMixin, models.Model):
+    btw = models.OneToOneField('safe_driver.BTWClassP', on_delete=models.CASCADE, null=False,
+                               related_name='btw_passenger_safety_class_p')
 
     no_one_past_standee_line = models.IntegerField(_('No One Past Standee Line'), choices=NUMBER_CHOICES, default=0, )
     steps_clear = models.IntegerField(_('Steps Clear'), choices=NUMBER_CHOICES, default=0, )
@@ -223,31 +162,15 @@ class BTWPassengerSafetyBus(models.Model):
     def __unicode__(self):
         return '%s' % self.pk
 
-    @property
-    def possible_points(self):
-        points = 5 * 5
-        return points
-
-    @property
-    def points_received(self):
-        points = self.no_one_past_standee_line + self.steps_clear + self.everyone_seated + self.seatbelts_on + \
-                 self.holding_hand_rails_standing
-        return points
-
-    @property
-    def percent_effective(self):
-        percent = (self.points_received / self.possible_points) * 100
-        return '%s' % percent
-
     class Meta:
         ordering = ('-created',)
-        verbose_name = "BTW PAS - Passenger Safety"
+        verbose_name = "BTW Passenger Safety Class P"
 
 
-# 6. Eye movement and mirror use Bus
-class BTWEyeMovementAndMirrorBus(models.Model):
-    btw = models.OneToOneField('safe_driver.BTWBus', on_delete=models.CASCADE, null=False,
-                               related_name='btw_eye_movement_and_mirror_bus')
+# 6. Eye movement and mirror use Class P
+class BTWEyeMovementAndMirrorClassP(BTWClassMixin, models.Model):
+    btw = models.OneToOneField('safe_driver.BTWClassP', on_delete=models.CASCADE,
+                               null=False, related_name='btw_eye_movement_and_mirror_class_p')
 
     eyes_ahead = models.IntegerField(_('Eyes ahead'), choices=NUMBER_CHOICES, default=0, )
     follow_up_in_mirror = models.IntegerField(_('Follow-up in mirror'), choices=NUMBER_CHOICES, default=0, )
@@ -262,31 +185,15 @@ class BTWEyeMovementAndMirrorBus(models.Model):
     def __unicode__(self):
         return '%s' % self.pk
 
-    @property
-    def possible_points(self):
-        points = 5 * 5
-        return points
-
-    @property
-    def points_received(self):
-        points = self.eyes_ahead + self.follow_up_in_mirror + self.checks_mirror + \
-                 self.scans_does_not_stare + self.avoid_billboards
-        return points
-
-    @property
-    def percent_effective(self):
-        percent = (self.points_received / self.possible_points) * 100
-        return '%s' % percent
-
     class Meta:
         ordering = ('-created',)
-        verbose_name = "BTW - Eye movement and mirror use Bus"
+        verbose_name = "BTW - Eye movement and mirror use Class P"
 
 
-# 7. Recognizes Hazards Bus
-class BTWRecognizesHazardsBus(models.Model):
-    btw = models.OneToOneField('safe_driver.BTWBus', on_delete=models.CASCADE, null=False,
-                               related_name='btw_recognizes_hazards_bus')
+# 7. Recognizes Hazards Class P
+class BTWRecognizesHazardsClassP(BTWClassMixin, models.Model):
+    btw = models.OneToOneField('safe_driver.BTWClassP', on_delete=models.CASCADE, null=False,
+                               related_name='btw_recognizes_hazards_class_p')
 
     uses_horn = models.IntegerField(_('Uses Horn to communicate'), choices=NUMBER_CHOICES, default=0, )
     makes_adjustments = models.IntegerField(_('Makes Adjustments'), choices=NUMBER_CHOICES, default=0, )
@@ -299,30 +206,15 @@ class BTWRecognizesHazardsBus(models.Model):
     def __unicode__(self):
         return '%s' % self.pk
 
-    @property
-    def possible_points(self):
-        points = 5 * 3
-        return points
-
-    @property
-    def points_received(self):
-        points = self.uses_horn + self.makes_adjustments + self.path_of_least_resistance
-        return points
-
-    @property
-    def percent_effective(self):
-        percent = (self.points_received / self.possible_points) * 100
-        return '%s' % percent
-
     class Meta:
         ordering = ('-created',)
-        verbose_name = "BTW - Recognizes Hazards Bus"
+        verbose_name = "BTW - Recognizes Hazards Class P"
 
 
-# 8. Lights and Signals Bus
-class BTWLightsAndSignalsBus(models.Model):
-    btw = models.OneToOneField('safe_driver.BTWBus', on_delete=models.CASCADE, null=False,
-                               related_name='btw_lights_and_signals_bus')
+# 8. Lights and Signals Class P
+class BTWLightsAndSignalsClassP(BTWClassMixin, models.Model):
+    btw = models.OneToOneField('safe_driver.BTWClassP', on_delete=models.CASCADE, null=False,
+                               related_name='btw_lights_and_signals_class_p')
 
     proper_use_of_lights = models.IntegerField(_('Proper use of lights'), choices=NUMBER_CHOICES, default=0, )
     adjust_speed = models.IntegerField(_('Adjust Speed'), choices=NUMBER_CHOICES, default=0, )
@@ -337,31 +229,15 @@ class BTWLightsAndSignalsBus(models.Model):
     def __unicode__(self):
         return '%s' % self.pk
 
-    @property
-    def possible_points(self):
-        points = 5 * 5
-        return points
-
-    @property
-    def points_received(self):
-        points = self.proper_use_of_lights + self.adjust_speed + self.signals_well_in_advance + \
-                 self.cancels_signal + self.use_of_4_ways
-        return points
-
-    @property
-    def percent_effective(self):
-        percent = (self.points_received / self.possible_points) * 100
-        return '%s' % percent
-
     class Meta:
         ordering = ('-created',)
-        verbose_name = "BTW - Lights and Signals Bus"
+        verbose_name = "BTW - Lights and Signals Class P"
 
 
-# 9. Steering Bus
-class BTWSteeringBus(models.Model):
-    btw = models.OneToOneField('safe_driver.BTWBus', on_delete=models.CASCADE, null=False,
-                               related_name='btw_steering_bus')
+# 9. Steering Class P
+class BTWSteeringClassP(BTWClassMixin, models.Model):
+    btw = models.OneToOneField('safe_driver.BTWClassP', on_delete=models.CASCADE, null=False,
+                               related_name='btw_steering_class_p')
 
     over_steers = models.IntegerField(_('Over Steers'), choices=NUMBER_CHOICES, default=0, )
     floats = models.IntegerField(_('Floats'), choices=NUMBER_CHOICES, default=0, )
@@ -375,30 +251,15 @@ class BTWSteeringBus(models.Model):
     def __unicode__(self):
         return '%s' % self.pk
 
-    @property
-    def possible_points(self):
-        points = 5 * 4
-        return points
-
-    @property
-    def points_received(self):
-        points = self.over_steers + self.floats + self.poisture_and_grip + self.centered_in_lane
-        return points
-
-    @property
-    def percent_effective(self):
-        percent = (self.points_received / self.possible_points) * 100
-        return '%s' % percent
-
     class Meta:
         ordering = ('-created',)
-        verbose_name = "BTW - Steering Bus"
+        verbose_name = "BTW - Steering Class P"
 
 
-# 10. Backing Bus
-class BTWBackingBus(models.Model):
-    btw = models.OneToOneField('safe_driver.BTWBus', on_delete=models.CASCADE, null=False,
-                               related_name='btw_backing_bus')
+# 10. Backing Class P
+class BTWBackingClassP(BTWClassMixin, models.Model):
+    btw = models.OneToOneField('safe_driver.BTWClassP', on_delete=models.CASCADE, null=False,
+                               related_name='btw_backing_class_p')
 
     size_up_situation = models.IntegerField(_('Size up situation'), choices=NUMBER_CHOICES, default=0, )
     driver_side_back = models.IntegerField(_('Driver side back'), choices=NUMBER_CHOICES, default=0, )
@@ -417,32 +278,15 @@ class BTWBackingBus(models.Model):
     def __unicode__(self):
         return '%s' % self.pk
 
-    @property
-    def possible_points(self):
-        points = 5 * 9
-        return points
-
-    @property
-    def points_received(self):
-        points = self.size_up_situation + self.driver_side_back + self.check_rear + self.gets_attention + \
-                 self.backs_slowly + self.rechecks_conditions + self.uses_other_aids + \
-                 self.steers_correctly + self.does_not_hit_dock
-        return points
-
-    @property
-    def percent_effective(self):
-        percent = (self.points_received / self.possible_points) * 100
-        return '%s' % percent
-
     class Meta:
         ordering = ('-created',)
-        verbose_name = "BTW - Backing Bus"
+        verbose_name = "BTW - Backing Class P"
 
 
-# 11. Speed Bus
-class BTWSpeedBus(models.Model):
-    btw = models.OneToOneField('safe_driver.BTWBus', on_delete=models.CASCADE, null=False,
-                               related_name='btw_speed_bus')
+# 11. Speed Class P
+class BTWSpeedClassP(BTWClassMixin, models.Model):
+    btw = models.OneToOneField('safe_driver.BTWClassP', on_delete=models.CASCADE, null=False,
+                               related_name='btw_speed_class_p')
 
     adjust_to_conditions = models.IntegerField(_('Adjust to conditions'), choices=NUMBER_CHOICES, default=0, )
     speed = models.IntegerField(_('Speed'), choices=NUMBER_CHOICES, default=0, )
@@ -456,30 +300,15 @@ class BTWSpeedBus(models.Model):
     def __unicode__(self):
         return '%s' % self.pk
 
-    @property
-    def possible_points(self):
-        points = 5 * 4
-        return points
-
-    @property
-    def points_received(self):
-        points = self.adjust_to_conditions + self.speed + self.proper_following_distance + self.speed_on_curves
-        return points
-
-    @property
-    def percent_effective(self):
-        percent = (self.points_received / self.possible_points) * 100
-        return '%s' % percent
-
     class Meta:
         ordering = ('-created',)
-        verbose_name = "BTW - Speed Bus"
+        verbose_name = "BTW - Speed Class P"
 
 
-# 12. Intersections BTW Bus
-class BTWIntersectionsBus(models.Model):
-    btw = models.OneToOneField('safe_driver.BTWBus', on_delete=models.CASCADE, null=False,
-                               related_name='btw_intersections_bus')
+# 12. Intersections BTW Class P
+class BTWIntersectionsClassP(BTWClassMixin, models.Model):
+    btw = models.OneToOneField('safe_driver.BTWClassP', on_delete=models.CASCADE, null=False,
+                               related_name='btw_intersections_class_p')
 
     approach_decision_point = models.IntegerField(_('Approach -decision point'), choices=NUMBER_CHOICES, default=0, )
     clear_intersection = models.IntegerField(_('Clear Intersection L-R-L'), choices=NUMBER_CHOICES, default=0, )
@@ -501,33 +330,15 @@ class BTWIntersectionsBus(models.Model):
     def __unicode__(self):
         return '%s' % self.pk
 
-    @property
-    def possible_points(self):
-        points = 5 * 11
-        return points
-
-    @property
-    def points_received(self):
-        points = self.approach_decision_point + self.clear_intersection + self.check_mirrors + \
-                 self.full_stop + self.times_light_or_starts + self.steering_axel_staright + \
-                 self.yields_right_of_way + self.proper_speed_or_gear + self.leaves_space + \
-                 self.stop_lines + self.railroad_crossings
-        return points
-
-    @property
-    def percent_effective(self):
-        percent = (self.points_received / self.possible_points) * 100
-        return '%s' % percent
-
     class Meta:
         ordering = ('-created',)
-        verbose_name = "BTW - Intersections BUS"
+        verbose_name = "BTW - Intersections Class P"
 
 
-# 13. Turning BTW Bus
-class BTWTurningBus(models.Model):
-    btw = models.OneToOneField('safe_driver.BTWBus', on_delete=models.CASCADE, null=False,
-                               related_name='btw_turning_bus')
+# 13. Turning BTW Class P
+class BTWTurningClassP(BTWClassMixin, models.Model):
+    btw = models.OneToOneField('safe_driver.BTWClassP', on_delete=models.CASCADE, null=False,
+                               related_name='btw_turning_class_p')
 
     signals_correctly = models.IntegerField(_('Signals correctly'), choices=NUMBER_CHOICES, default=0, )
     gets_in_proper_time = models.IntegerField(_('Gets in proper lane'), choices=NUMBER_CHOICES, default=0, )
@@ -546,32 +357,15 @@ class BTWTurningBus(models.Model):
     def __unicode__(self):
         return '%s' % self.pk
 
-    @property
-    def possible_points(self):
-        points = 5 * 8
-        return points
-
-    @property
-    def points_received(self):
-        points = self.signals_correctly + self.gets_in_proper_time + self.downshifts_to_pulling_gear + \
-                 self.handles_light_correctly + self.setup_and_execution + self.turn_speed + \
-                 self.mirror_follow_up + self.turns_lane_to_lane
-        return points
-
-    @property
-    def percent_effective(self):
-        percent = (self.points_received / self.possible_points) * 100
-        return '%s' % percent
-
     class Meta:
         ordering = ('-created',)
-        verbose_name = "BTW - Turning Bus"
+        verbose_name = "BTW - Turning Class P"
 
 
-# 14. Parking BTW Bus
-class BTWParkingBus(models.Model):
-    btw = models.OneToOneField('safe_driver.BTWBus', on_delete=models.CASCADE, null=False,
-                               related_name='btw_parking_bus')
+# 14. Parking BTW Class P
+class BTWParkingClassP(BTWClassMixin, models.Model):
+    btw = models.OneToOneField('safe_driver.BTWClassP', on_delete=models.CASCADE, null=False,
+                               related_name='btw_parking_class_p')
 
     does_not_hit_curb = models.IntegerField(_('Doesn’t hit curb'), choices=NUMBER_CHOICES, default=0, )
     curbs_wheels = models.IntegerField(_('Curbs wheels'), choices=NUMBER_CHOICES, default=0, )
@@ -587,31 +381,15 @@ class BTWParkingBus(models.Model):
     def __unicode__(self):
         return '%s' % self.pk
 
-    @property
-    def possible_points(self):
-        points = 5 * 6
-        return points
-
-    @property
-    def points_received(self):
-        points = self.does_not_hit_curb + self.curbs_wheels + self.chock_wheels + self.park_brake_applied + \
-                 self.trans_in_neutral + self.engine_off
-        return points
-
-    @property
-    def percent_effective(self):
-        percent = (self.points_received / self.possible_points) * 100
-        return '%s' % percent
-
     class Meta:
         ordering = ('-created',)
-        verbose_name = "BTW - Parking Bus"
+        verbose_name = "BTW - Parking Class P"
 
 
-# 15. Hills Bus
-class BTWHillsBus(models.Model):
-    btw = models.OneToOneField('safe_driver.BTWBus', on_delete=models.CASCADE, null=False,
-                               related_name='btw_hills_bus')
+# 15. Hills Class P
+class BTWHillsClassP(BTWClassMixin, models.Model):
+    btw = models.OneToOneField('safe_driver.BTWClassP', on_delete=models.CASCADE, null=False,
+                               related_name='btw_hills_class_p')
 
     proper_gear_up_down = models.IntegerField(_('Proper gear up or down'), choices=NUMBER_CHOICES, default=0, )
     avoids_rolling_back = models.IntegerField(_('Avoids rolling back H/V'), choices=NUMBER_CHOICES, default=0, )
@@ -624,30 +402,15 @@ class BTWHillsBus(models.Model):
     def __unicode__(self):
         return '%s' % self.pk
 
-    @property
-    def possible_points(self):
-        points = 5 * 3
-        return points
-
-    @property
-    def points_received(self):
-        points = self.proper_gear_up_down + self.avoids_rolling_back + self.test_brakes_prior
-        return points
-
-    @property
-    def percent_effective(self):
-        percent = (self.points_received / self.possible_points) * 100
-        return '%s' % percent
-
     class Meta:
         ordering = ('-created',)
-        verbose_name = "BTW - Hills Bus"
+        verbose_name = "BTW - Hills Class P"
 
 
-# 16. Passing Bus
-class BTWPassingBus(models.Model):
-    btw = models.OneToOneField('safe_driver.BTWBus', on_delete=models.CASCADE, null=False,
-                               related_name='btw_passing_bus')
+# 16. Passing Class P
+class BTWPassingClassP(BTWClassMixin, models.Model):
+    btw = models.OneToOneField('safe_driver.BTWClassP', on_delete=models.CASCADE, null=False,
+                               related_name='btw_passing_class_p')
 
     sufficient_space_to_pass = models.IntegerField(_('Sufficient Space to Pass'), choices=NUMBER_CHOICES, default=0, )
     signals_property = models.IntegerField(_('Signals Property'), choices=NUMBER_CHOICES, default=0, )
@@ -660,30 +423,15 @@ class BTWPassingBus(models.Model):
     def __unicode__(self):
         return '%s' % self.pk
 
-    @property
-    def possible_points(self):
-        points = 5 * 3
-        return points
-
-    @property
-    def points_received(self):
-        points = self.sufficient_space_to_pass + self.signals_property + self.check_mirrors
-        return points
-
-    @property
-    def percent_effective(self):
-        percent = (self.points_received / self.possible_points) * 100
-        return '%s' % percent
-
     class Meta:
         ordering = ('-created',)
-        verbose_name = "BTW - Passing Bus"
+        verbose_name = "BTW - Passing Class P"
 
 
-# 17. Railroad Crossing BTW Bus
-class BTWRailroadCrossingBus(models.Model):
-    btw = models.OneToOneField('safe_driver.BTWBus', on_delete=models.CASCADE, null=False,
-                               related_name='btw_railroad_crossing_bus')
+# 17. Railroad Crossing BTW Class P
+class BTWRailroadCrossingClassP(BTWClassMixin, models.Model):
+    btw = models.OneToOneField('safe_driver.BTWClassP', on_delete=models.CASCADE, null=False,
+                               related_name='btw_railroad_crossing_class_p')
 
     signal_and_activate_4_ways = models.IntegerField(_('Signal & Activate 4-ways'), choices=NUMBER_CHOICES, default=0, )
     stop_prior = models.IntegerField(_('Stop 10’ to 50’ prior'), choices=NUMBER_CHOICES, default=0, )
@@ -699,31 +447,15 @@ class BTWRailroadCrossingBus(models.Model):
     def __unicode__(self):
         return '%s' % self.pk
 
-    @property
-    def possible_points(self):
-        points = 5 * 5
-        return points
-
-    @property
-    def points_received(self):
-        points = self.signal_and_activate_4_ways + self.stop_prior + self.open_window_and_door + \
-                 self.look_listen_clear + self.signal_and_merge_into_traffic
-        return points
-
-    @property
-    def percent_effective(self):
-        percent = (self.points_received / self.possible_points) * 100
-        return '%s' % percent
-
     class Meta:
         ordering = ('-created',)
-        verbose_name = "BTW - Railroad Crossing Bus"
+        verbose_name = "BTW - Railroad Crossing Class P"
 
 
-# 18. General Safety and DOT adherence
-class BTWGeneralSafetyAndDOTAdherenceBus(models.Model):
-    btw = models.OneToOneField('safe_driver.BTWBus', on_delete=models.CASCADE, null=False,
-                               related_name='btw_general_safety_bus')
+# 18. General Safety and DOT adherence Class P
+class BTWGeneralSafetyAndDOTAdherenceClassP(BTWClassMixin, models.Model):
+    btw = models.OneToOneField('safe_driver.BTWClassP', on_delete=models.CASCADE, null=False,
+                               related_name='btw_general_safety_class_p')
 
     avoids_crowding_effect = models.IntegerField(_('Avoids crowding effect'), choices=NUMBER_CHOICES, default=0, )
     stays_right_or_correct_lane = models.IntegerField(_('Stays to the right/correct lane'), choices=NUMBER_CHOICES,
@@ -752,34 +484,15 @@ class BTWGeneralSafetyAndDOTAdherenceBus(models.Model):
     def __unicode__(self):
         return '%s' % self.pk
 
-    @property
-    def possible_points(self):
-        points = 5 * 13
-        return points
-
-    @property
-    def points_received(self):
-        points = self.avoids_crowding_effect + self.stays_right_or_correct_lane + self.aware_hours_of_service + \
-                 self.proper_use_off_mirrors + self.self_confident_not_complacement + self.check_instruments + \
-                 self.uses_horn_properly + self.maintains_dot_log + self.drives_defensively + \
-                 self.company_haz_mat_protocol + self.air_cans_or_line_moisture_free + \
-                 self.avoid_distractions_while_driving + self.works_safely_to_avoid_injuries
-        return points
-
-    @property
-    def percent_effective(self):
-        percent = (self.points_received / self.possible_points) * 100
-        return '%s' % percent
-
     class Meta:
         ordering = ('-created',)
-        verbose_name = "BTW - General Safety and DOT adherence - Bus"
+        verbose_name = "BTW - General Safety and DOT adherence Class P"
 
 
-# 19. Internal Environtment -  BTW Bus
-class BTWInternalEnvironmentBus(models.Model):
-    btw = models.OneToOneField('safe_driver.BTWBus', on_delete=models.CASCADE, null=False,
-                               related_name='btw_internal_environment_bus')
+# 19. Internal Environtment -  BTW Class P
+class BTWInternalEnvironmentClassP(BTWClassMixin, models.Model):
+    btw = models.OneToOneField('safe_driver.BTWClassP', on_delete=models.CASCADE, null=False,
+                               related_name='btw_internal_environment_class_p')
 
     driver_aid = models.IntegerField(_('Driver Aid'), choices=NUMBER_CHOICES, default=0, )
     interior_passenger_mirror_check = models.IntegerField(_('Interior Passenger Mirror Check'),
@@ -797,22 +510,6 @@ class BTWInternalEnvironmentBus(models.Model):
     def __unicode__(self):
         return '%s' % self.pk
 
-    @property
-    def possible_points(self):
-        points = 5 * 6
-        return points
-
-    @property
-    def points_received(self):
-        points = self.driver_aid + self.interior_passenger_mirror_check + self.safe_path + \
-                 self.maintain_proper_grip + self.smooth_driving_movements + self.maintain_comfortable_environment
-        return points
-
-    @property
-    def percent_effective(self):
-        percent = (self.points_received / self.possible_points) * 100
-        return '%s' % percent
-
     class Meta:
         ordering = ('-created',)
-        verbose_name = "BTW - Internal Environtment - Bus"
+        verbose_name = "BTW - Internal Environtment Class P"

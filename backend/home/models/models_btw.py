@@ -1,8 +1,6 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
-from safe_driver.image_functions import signature_image_folder, map_image_folder
-
 NUMBER_CHOICES = (
     (1, "1"),
     (2, "2"),
@@ -13,27 +11,25 @@ NUMBER_CHOICES = (
 )
 
 
-# student BTW Bus
-class BTWBus(models.Model):
-    test = models.ForeignKey('safe_driver.StudentTest', on_delete=models.CASCADE, null=False,
-                             related_name='btw_test_bus')
+# student BTW
+class SafeDriveBTW(models.Model):
+    student = models.OneToOneField('users.User', on_delete=models.CASCADE, related_name='btw_student',
+                                   null=False)
+    test = models.ForeignKey('safe_driver.StudentTest', on_delete=models.CASCADE, null=True, blank=True)
 
     date = models.DateField(null=True, blank=True, default=None, verbose_name='Date')
     start_time = models.TimeField(null=True, blank=True, default=None, verbose_name='Start Time')
     end_time = models.TimeField(null=True, blank=True, default=None, verbose_name='End Time')
-    driver_signature = models.ImageField(_('Driver Signature'), upload_to=signature_image_folder, default=None,
+    driver_signature = models.ImageField(_('Driver Signature'), upload_to='signatures/btw/driver/', default=None,
                                          null=True, blank=True)
-    evaluator_signature = models.ImageField(_('Evaluator Signature'), upload_to=signature_image_folder,
+    evaluator_signature = models.ImageField(_('Evaluator Signature'), upload_to='signatures/btw/evaluator/',
                                             default=None, null=True,
                                             blank=True)
-    company_rep_signature = models.ImageField(_('Company Rep Signature'), upload_to=signature_image_folder,
+    company_rep_signature = models.ImageField(_('Company Rep Signature'), upload_to='signatures/btw/company/',
                                               default=None, null=True,
                                               blank=True)
     company_rep_name = models.CharField(max_length=150, null=True, blank=True, default=None,
                                         verbose_name='Company Rep. Name')
-
-    map_data = models.TextField(_('Map Data'), null=True, blank=True)
-    map_image = models.ImageField(_('Map Image'), upload_to=map_image_folder, null=True, blank=True)
 
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
@@ -42,21 +38,19 @@ class BTWBus(models.Model):
         return '%s' % self.pk
 
     def __str__(self):
-        return '%s BTW - %s' % (self.test.student.full_name, self.pk)
+        return '%s BTW - %s' % (self.student.full_name, self.pk)
 
     class Meta:
         ordering = ('-created',)
-        verbose_name = "Behind The Wheel Bus"
-        verbose_name_plural = "Behind The Wheel Bus"
+        verbose_name = "Behind The Wheel"
 
 
-# 1. Cab safety Bus
-class BTWCabSafetyBus(models.Model):
-    btw = models.OneToOneField('safe_driver.BTWBus', on_delete=models.CASCADE, null=False,
-                               related_name='btw_cab_safety_bus')
+# 1. Cab safety
+class BTWCabSafety(models.Model):
+    btw = models.OneToOneField('safe_driver.SafeDriveBTW', on_delete=models.CASCADE, null=False)
 
     seat_belt = models.IntegerField(_('Seat Belt'), choices=NUMBER_CHOICES, default=0, )
-    cab_distractions = models.IntegerField(_('Cab distractions'), choices=NUMBER_CHOICES, default=0, )
+    can_distractions = models.IntegerField(_('Cab distractions'), choices=NUMBER_CHOICES, default=0, )
     cab_obstructions = models.IntegerField(_('Cab Obstructions'), choices=NUMBER_CHOICES, default=0, )
     cab_chemicals = models.IntegerField(_('Cab Chemicals'), choices=NUMBER_CHOICES, default=0, )
 
@@ -74,7 +68,7 @@ class BTWCabSafetyBus(models.Model):
 
     @property
     def points_received(self):
-        points = self.seat_belt + self.cab_distractions + self.cab_obstructions + self.cab_chemicals
+        points = self.seat_belt + self.can_distractions + self.cab_obstructions + self.cab_chemicals
         return points
 
     @property
@@ -84,16 +78,16 @@ class BTWCabSafetyBus(models.Model):
 
     class Meta:
         ordering = ('-created',)
-        verbose_name = "BTW Cab Safety Bus"
+        verbose_name = "BTW Cab Safety"
 
 
-# 2. Start Engine Bus
-class BTWStartEngineBus(models.Model):
-    btw = models.OneToOneField('safe_driver.BTWBus', on_delete=models.CASCADE, null=False,
-                               related_name='btw_start_engine_bus')
+# 2. Start Engine
+class BTWStartEngine(models.Model):
+    btw = models.OneToOneField('safe_driver.SafeDriveBTW', on_delete=models.CASCADE, null=False)
 
     park_brake_applied = models.IntegerField(_('Park Brake Applied'), choices=NUMBER_CHOICES, default=0, )
-    trans_in_neutral = models.IntegerField(_('Trans in Neutral'), choices=NUMBER_CHOICES, default=0, )
+    trans_in_park_or_neutral = models.IntegerField(_('Trans in Park or Neutral'), choices=NUMBER_CHOICES, default=0, )
+    clutch_depressed = models.IntegerField(_('Clutch depressed'), choices=NUMBER_CHOICES, default=0, )
     uses_starter_properly = models.IntegerField(_('Uses Starter Properly'), choices=NUMBER_CHOICES, default=0, )
 
     notes = models.TextField(_('Notes'), null=True, blank=True)
@@ -110,7 +104,8 @@ class BTWStartEngineBus(models.Model):
 
     @property
     def points_received(self):
-        points = self.park_brake_applied + self.trans_in_neutral + self.uses_starter_properly
+        points = self.park_brake_applied + self.trans_in_park_or_neutral + self.clutch_depressed + \
+                 self.uses_starter_properly
         return points
 
     @property
@@ -120,17 +115,17 @@ class BTWStartEngineBus(models.Model):
 
     class Meta:
         ordering = ('-created',)
-        verbose_name = "BTW Start Engine Bus"
+        verbose_name = "BTW Start Engine"
 
 
-# 3. Engine Operation Bus
-class BTWEngineOperationBus(models.Model):
-    btw = models.OneToOneField('safe_driver.BTWBus', on_delete=models.CASCADE, null=False,
-                               related_name='btw_engine_operation_bus')
+# 3. Engine Operation
+class BTWEngineOperation(models.Model):
+    btw = models.OneToOneField('safe_driver.SafeDriveBTW', on_delete=models.CASCADE, null=False)
 
     lugging = models.IntegerField(_('Lugging'), choices=NUMBER_CHOICES, default=0, )
+    over_revving = models.IntegerField(_('Over Revving'), choices=NUMBER_CHOICES, default=0, )
     check_gauges = models.IntegerField(_('Check Gauges'), choices=NUMBER_CHOICES, default=0, )
-    start_off_smoothly = models.IntegerField(_('Start Off Smoothly'), choices=NUMBER_CHOICES, default=0, )
+    does_not_ride = models.IntegerField(_('Doesn’t Ride'), choices=NUMBER_CHOICES, default=0, )
 
     notes = models.TextField(_('Notes'), null=True, blank=True)
     created = models.DateTimeField(auto_now_add=True)
@@ -141,12 +136,13 @@ class BTWEngineOperationBus(models.Model):
 
     @property
     def possible_points(self):
-        points = 5 * 3
+        points = 5 * 4
         return points
 
     @property
     def points_received(self):
-        points = self.lugging + self.check_gauges + self.start_off_smoothly
+        points = self.lugging + self.over_revving + self.check_gauges + \
+                 self.does_not_ride
         return points
 
     @property
@@ -156,13 +152,126 @@ class BTWEngineOperationBus(models.Model):
 
     class Meta:
         ordering = ('-created',)
-        verbose_name = "BTW Engine Operation Bus"
+        verbose_name = "BTW Engine Operation"
 
 
-# 4. Use of Brakes and Stopping Bus
-class BTWBrakesAndStoppingsBus(models.Model):
-    btw = models.OneToOneField('safe_driver.BTWBus', on_delete=models.CASCADE, null=False,
-                               related_name='btw_brakes_and_stopping_bus')
+# 4. Clutch and Transmission
+class BTWClutchAndTransmission(models.Model):
+    btw = models.OneToOneField('safe_driver.SafeDriveBTW', on_delete=models.CASCADE, null=False)
+
+    start_off_smoothly = models.IntegerField(_('Start off smoothly'), choices=NUMBER_CHOICES, default=0, )
+    proper_gear_use = models.IntegerField(_('Proper gear use'), choices=NUMBER_CHOICES, default=0, )
+    shift_smoothly = models.IntegerField(_('Shift smoothly'), choices=NUMBER_CHOICES, default=0, )
+    proper_gear_sequence = models.IntegerField(_('Proper gear sequence'), choices=NUMBER_CHOICES, default=0, )
+
+    notes = models.TextField(_('Notes'), null=True, blank=True)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+    def __unicode__(self):
+        return '%s' % self.pk
+
+    @property
+    def possible_points(self):
+        points = 5 * 4
+        return points
+
+    @property
+    def points_received(self):
+        points = self.start_off_smoothly + self.proper_gear_use + self.shift_smoothly + \
+                 self.proper_gear_sequence
+        return points
+
+    @property
+    def percent_effective(self):
+        percent = (self.points_received / self.possible_points) * 100
+        return '%s' % percent
+
+    class Meta:
+        ordering = ('-created',)
+        verbose_name = "BTW Clutch and Transmission"
+
+
+# 5. Coupling
+class BTWCoupling(models.Model):
+    btw = models.OneToOneField('safe_driver.SafeDriveBTW', on_delete=models.CASCADE, null=False)
+
+    check_for_hazards = models.IntegerField(_('Check for Hazards'), choices=NUMBER_CHOICES, default=0, )
+    backs_under_slowly = models.IntegerField(_('Backs under slowly'), choices=NUMBER_CHOICES, default=0, )
+    secures_equipment = models.IntegerField(_('Secures equipment'), choices=NUMBER_CHOICES, default=0, )
+    physical_check_coupling = models.IntegerField(_('Physical check coupling'), choices=NUMBER_CHOICES, default=0, )
+    charges_system_correctly = models.IntegerField(_('Charges system correctly'), choices=NUMBER_CHOICES, default=0, )
+
+    notes = models.TextField(_('Notes'), null=True, blank=True)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+    def __unicode__(self):
+        return '%s' % self.pk
+
+    @property
+    def possible_points(self):
+        points = 5 * 5
+        return points
+
+    @property
+    def points_received(self):
+        points = self.check_for_hazards + self.backs_under_slowly + self.secures_equipment + \
+                 self.physical_check_coupling + self.charges_system_correctly
+        return points
+
+    @property
+    def percent_effective(self):
+        percent = (self.points_received / self.possible_points) * 100
+        return '%s' % percent
+
+    class Meta:
+        ordering = ('-created',)
+        verbose_name = "BTW Coupling"
+
+
+# 6. Uncoupling
+class BTWUncoupling(models.Model):
+    btw = models.OneToOneField('safe_driver.SafeDriveBTW', on_delete=models.CASCADE, null=False)
+
+    secures_equipment = models.IntegerField(_('Secures equipment'), choices=NUMBER_CHOICES, default=0, )
+    chock_wheels = models.IntegerField(_('Chock Wheels'), choices=NUMBER_CHOICES, default=0, )
+    lower_landing_gear = models.IntegerField(_('Lower Landing Gear'), choices=NUMBER_CHOICES, default=0, )
+    pull_away_or_trailer_secure = models.IntegerField(_('Pull away/trailer secure'), choices=NUMBER_CHOICES,
+                                                      default=0, )
+    leve_or_firm_ground = models.IntegerField(_('Leve/firm ground'), choices=NUMBER_CHOICES, default=0, )
+
+    notes = models.TextField(_('Notes'), null=True, blank=True)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+    def __unicode__(self):
+        return '%s' % self.pk
+
+    @property
+    def possible_points(self):
+        points = 5 * 5
+        return points
+
+    @property
+    def points_received(self):
+        points = self.secures_equipment + self.chock_wheels + self.lower_landing_gear + \
+                 self.pull_away_or_trailer_secure + self.leve_or_firm_ground
+        return points
+
+    @property
+    def percent_effective(self):
+        percent = (self.points_received / self.possible_points) * 100
+        return '%s' % percent
+
+    class Meta:
+        ordering = ('-created',)
+        verbose_name = "BTW Uncoupling"
+
+
+# 7. Use of Brakes and Stopping
+class BTWBrakesAndStoppings(models.Model):
+    btw = models.OneToOneField('safe_driver.SafeDriveBTW', on_delete=models.CASCADE, null=False)
 
     checks_rear_or_gives_warning = models.IntegerField(_('Checks rear/gives warning'), choices=NUMBER_CHOICES,
                                                        default=0, )
@@ -201,53 +310,12 @@ class BTWBrakesAndStoppingsBus(models.Model):
 
     class Meta:
         ordering = ('-created',)
-        verbose_name = "BTW - Use of Brakes and Stopping Bus"
+        verbose_name = "BTW - Use of Brakes and Stopping"
 
 
-# 5. Passenger Safety
-class BTWPassengerSafetyBus(models.Model):
-    btw = models.OneToOneField('safe_driver.BTWBus', on_delete=models.CASCADE, null=False,
-                               related_name='btw_passenger_safety_bus')
-
-    no_one_past_standee_line = models.IntegerField(_('No One Past Standee Line'), choices=NUMBER_CHOICES, default=0, )
-    steps_clear = models.IntegerField(_('Steps Clear'), choices=NUMBER_CHOICES, default=0, )
-    everyone_seated = models.IntegerField(_('Everyone Seated'), choices=NUMBER_CHOICES, default=0, )
-    seatbelts_on = models.IntegerField(_('Seatbelts On (if required)'), choices=NUMBER_CHOICES, default=0, )
-    holding_hand_rails_standing = models.IntegerField(_('Holding Hand Rails Standing'), choices=NUMBER_CHOICES,
-                                                      default=0, )
-
-    notes = models.TextField(_('Notes'), null=True, blank=True)
-    created = models.DateTimeField(auto_now_add=True)
-    updated = models.DateTimeField(auto_now=True)
-
-    def __unicode__(self):
-        return '%s' % self.pk
-
-    @property
-    def possible_points(self):
-        points = 5 * 5
-        return points
-
-    @property
-    def points_received(self):
-        points = self.no_one_past_standee_line + self.steps_clear + self.everyone_seated + self.seatbelts_on + \
-                 self.holding_hand_rails_standing
-        return points
-
-    @property
-    def percent_effective(self):
-        percent = (self.points_received / self.possible_points) * 100
-        return '%s' % percent
-
-    class Meta:
-        ordering = ('-created',)
-        verbose_name = "BTW PAS - Passenger Safety"
-
-
-# 6. Eye movement and mirror use Bus
-class BTWEyeMovementAndMirrorBus(models.Model):
-    btw = models.OneToOneField('safe_driver.BTWBus', on_delete=models.CASCADE, null=False,
-                               related_name='btw_eye_movement_and_mirror_bus')
+# 8. Eye movement and mirror use
+class BTWEyeMovementAndMirror(models.Model):
+    btw = models.OneToOneField('safe_driver.SafeDriveBTW', on_delete=models.CASCADE, null=False)
 
     eyes_ahead = models.IntegerField(_('Eyes ahead'), choices=NUMBER_CHOICES, default=0, )
     follow_up_in_mirror = models.IntegerField(_('Follow-up in mirror'), choices=NUMBER_CHOICES, default=0, )
@@ -280,13 +348,12 @@ class BTWEyeMovementAndMirrorBus(models.Model):
 
     class Meta:
         ordering = ('-created',)
-        verbose_name = "BTW - Eye movement and mirror use Bus"
+        verbose_name = "BTW - Eye movement and mirror use"
 
 
-# 7. Recognizes Hazards Bus
-class BTWRecognizesHazardsBus(models.Model):
-    btw = models.OneToOneField('safe_driver.BTWBus', on_delete=models.CASCADE, null=False,
-                               related_name='btw_recognizes_hazards_bus')
+# 9. Recognizes Hazards
+class BTWRecognizesHazards(models.Model):
+    btw = models.OneToOneField('safe_driver.SafeDriveBTW', on_delete=models.CASCADE, null=False)
 
     uses_horn = models.IntegerField(_('Uses Horn to communicate'), choices=NUMBER_CHOICES, default=0, )
     makes_adjustments = models.IntegerField(_('Makes Adjustments'), choices=NUMBER_CHOICES, default=0, )
@@ -316,13 +383,12 @@ class BTWRecognizesHazardsBus(models.Model):
 
     class Meta:
         ordering = ('-created',)
-        verbose_name = "BTW - Recognizes Hazards Bus"
+        verbose_name = "BTW - Recognizes Hazards"
 
 
-# 8. Lights and Signals Bus
-class BTWLightsAndSignalsBus(models.Model):
-    btw = models.OneToOneField('safe_driver.BTWBus', on_delete=models.CASCADE, null=False,
-                               related_name='btw_lights_and_signals_bus')
+# 10. Lights and Signals
+class BTWLightsAndSignals(models.Model):
+    btw = models.OneToOneField('safe_driver.SafeDriveBTW', on_delete=models.CASCADE, null=False)
 
     proper_use_of_lights = models.IntegerField(_('Proper use of lights'), choices=NUMBER_CHOICES, default=0, )
     adjust_speed = models.IntegerField(_('Adjust Speed'), choices=NUMBER_CHOICES, default=0, )
@@ -355,13 +421,12 @@ class BTWLightsAndSignalsBus(models.Model):
 
     class Meta:
         ordering = ('-created',)
-        verbose_name = "BTW - Lights and Signals Bus"
+        verbose_name = "BTW - Lights and Signals"
 
 
-# 9. Steering Bus
-class BTWSteeringBus(models.Model):
-    btw = models.OneToOneField('safe_driver.BTWBus', on_delete=models.CASCADE, null=False,
-                               related_name='btw_steering_bus')
+# 11. Steering
+class BTWSteering(models.Model):
+    btw = models.OneToOneField('safe_driver.SafeDriveBTW', on_delete=models.CASCADE, null=False)
 
     over_steers = models.IntegerField(_('Over Steers'), choices=NUMBER_CHOICES, default=0, )
     floats = models.IntegerField(_('Floats'), choices=NUMBER_CHOICES, default=0, )
@@ -392,13 +457,12 @@ class BTWSteeringBus(models.Model):
 
     class Meta:
         ordering = ('-created',)
-        verbose_name = "BTW - Steering Bus"
+        verbose_name = "BTW - Steering"
 
 
-# 10. Backing Bus
-class BTWBackingBus(models.Model):
-    btw = models.OneToOneField('safe_driver.BTWBus', on_delete=models.CASCADE, null=False,
-                               related_name='btw_backing_bus')
+# 12. Backing
+class BTWBacking(models.Model):
+    btw = models.OneToOneField('safe_driver.SafeDriveBTW', on_delete=models.CASCADE, null=False)
 
     size_up_situation = models.IntegerField(_('Size up situation'), choices=NUMBER_CHOICES, default=0, )
     driver_side_back = models.IntegerField(_('Driver side back'), choices=NUMBER_CHOICES, default=0, )
@@ -436,13 +500,12 @@ class BTWBackingBus(models.Model):
 
     class Meta:
         ordering = ('-created',)
-        verbose_name = "BTW - Backing Bus"
+        verbose_name = "BTW - Backing"
 
 
-# 11. Speed Bus
-class BTWSpeedBus(models.Model):
-    btw = models.OneToOneField('safe_driver.BTWBus', on_delete=models.CASCADE, null=False,
-                               related_name='btw_speed_bus')
+# 13. Speed
+class BTWSpeed(models.Model):
+    btw = models.OneToOneField('safe_driver.SafeDriveBTW', on_delete=models.CASCADE, null=False)
 
     adjust_to_conditions = models.IntegerField(_('Adjust to conditions'), choices=NUMBER_CHOICES, default=0, )
     speed = models.IntegerField(_('Speed'), choices=NUMBER_CHOICES, default=0, )
@@ -473,13 +536,12 @@ class BTWSpeedBus(models.Model):
 
     class Meta:
         ordering = ('-created',)
-        verbose_name = "BTW - Speed Bus"
+        verbose_name = "BTW - Speed"
 
 
-# 12. Intersections BTW Bus
-class BTWIntersectionsBus(models.Model):
-    btw = models.OneToOneField('safe_driver.BTWBus', on_delete=models.CASCADE, null=False,
-                               related_name='btw_intersections_bus')
+# 14. Intersections
+class BTWIntersections(models.Model):
+    btw = models.OneToOneField('safe_driver.SafeDriveBTW', on_delete=models.CASCADE, null=False)
 
     approach_decision_point = models.IntegerField(_('Approach -decision point'), choices=NUMBER_CHOICES, default=0, )
     clear_intersection = models.IntegerField(_('Clear Intersection L-R-L'), choices=NUMBER_CHOICES, default=0, )
@@ -521,13 +583,12 @@ class BTWIntersectionsBus(models.Model):
 
     class Meta:
         ordering = ('-created',)
-        verbose_name = "BTW - Intersections BUS"
+        verbose_name = "BTW - Intersections"
 
 
-# 13. Turning BTW Bus
-class BTWTurningBus(models.Model):
-    btw = models.OneToOneField('safe_driver.BTWBus', on_delete=models.CASCADE, null=False,
-                               related_name='btw_turning_bus')
+# 15. Turning
+class BTWTurning(models.Model):
+    btw = models.OneToOneField('safe_driver.SafeDriveBTW', on_delete=models.CASCADE, null=False)
 
     signals_correctly = models.IntegerField(_('Signals correctly'), choices=NUMBER_CHOICES, default=0, )
     gets_in_proper_time = models.IntegerField(_('Gets in proper lane'), choices=NUMBER_CHOICES, default=0, )
@@ -565,13 +626,12 @@ class BTWTurningBus(models.Model):
 
     class Meta:
         ordering = ('-created',)
-        verbose_name = "BTW - Turning Bus"
+        verbose_name = "BTW - Turning"
 
 
-# 14. Parking BTW Bus
-class BTWParkingBus(models.Model):
-    btw = models.OneToOneField('safe_driver.BTWBus', on_delete=models.CASCADE, null=False,
-                               related_name='btw_parking_bus')
+# 16. Parking
+class BTWParking(models.Model):
+    btw = models.OneToOneField('safe_driver.SafeDriveBTW', on_delete=models.CASCADE, null=False)
 
     does_not_hit_curb = models.IntegerField(_('Doesn’t hit curb'), choices=NUMBER_CHOICES, default=0, )
     curbs_wheels = models.IntegerField(_('Curbs wheels'), choices=NUMBER_CHOICES, default=0, )
@@ -605,13 +665,58 @@ class BTWParkingBus(models.Model):
 
     class Meta:
         ordering = ('-created',)
-        verbose_name = "BTW - Parking Bus"
+        verbose_name = "BTW - Parking"
 
 
-# 15. Hills Bus
-class BTWHillsBus(models.Model):
-    btw = models.OneToOneField('safe_driver.BTWBus', on_delete=models.CASCADE, null=False,
-                               related_name='btw_hills_bus')
+# 17. Multiple trailers
+class BTWMultipleTrailers(models.Model):
+    btw = models.OneToOneField('safe_driver.SafeDriveBTW', on_delete=models.CASCADE, null=False)
+
+    heavier_trailer_in_front = models.IntegerField(_('Heavier trailer in front'), choices=NUMBER_CHOICES, default=0, )
+    builds_equip_properly = models.IntegerField(_('Builds equip properly'), choices=NUMBER_CHOICES, default=0, )
+    understand_types_of_dollies = models.IntegerField(_('Understand types of dollies'), choices=NUMBER_CHOICES,
+                                                      default=0, )
+    secures_dolly_properly = models.IntegerField(_('Secures dolly properly'), choices=NUMBER_CHOICES, default=0, )
+    speed_control_on_turns = models.IntegerField(_('Speed control on turns'), choices=NUMBER_CHOICES, default=0, )
+    avoids_abrupt_meneuvers = models.IntegerField(_('Avoids abrupt maneuvers'), choices=NUMBER_CHOICES, default=0, )
+    backs_one_item = models.IntegerField(_('Backs one item at a time'), choices=NUMBER_CHOICES, default=0, )
+    safe_while_connecting_dolly = models.IntegerField(_('Safe while connecting dolly'),
+                                                      choices=NUMBER_CHOICES,
+                                                      default=0, )
+    avoid_shifting_load = models.IntegerField(_('Avoid Shifting load'), choices=NUMBER_CHOICES, default=0, )
+
+    notes = models.TextField(_('Notes'), null=True, blank=True)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+    def __unicode__(self):
+        return '%s' % self.pk
+
+    @property
+    def possible_points(self):
+        points = 5 * 9
+        return points
+
+    @property
+    def points_received(self):
+        points = self.heavier_trailer_in_front + self.builds_equip_properly + self.understand_types_of_dollies + \
+                 self.secures_dolly_properly + self.speed_control_on_turns + self.avoids_abrupt_meneuvers + \
+                 self.backs_one_item + self.safe_while_connecting_dolly + self.avoid_shifting_load
+        return points
+
+    @property
+    def percent_effective(self):
+        percent = (self.points_received / self.possible_points) * 100
+        return '%s' % percent
+
+    class Meta:
+        ordering = ('-created',)
+        verbose_name = "BTW - Multiple trailers"
+
+
+# 18. Hills
+class BTWHills(models.Model):
+    btw = models.OneToOneField('safe_driver.SafeDriveBTW', on_delete=models.CASCADE, null=False)
 
     proper_gear_up_down = models.IntegerField(_('Proper gear up or down'), choices=NUMBER_CHOICES, default=0, )
     avoids_rolling_back = models.IntegerField(_('Avoids rolling back H/V'), choices=NUMBER_CHOICES, default=0, )
@@ -641,13 +746,12 @@ class BTWHillsBus(models.Model):
 
     class Meta:
         ordering = ('-created',)
-        verbose_name = "BTW - Hills Bus"
+        verbose_name = "BTW - Hills"
 
 
-# 16. Passing Bus
-class BTWPassingBus(models.Model):
-    btw = models.OneToOneField('safe_driver.BTWBus', on_delete=models.CASCADE, null=False,
-                               related_name='btw_passing_bus')
+# 19. Passing
+class BTWPassing(models.Model):
+    btw = models.OneToOneField('safe_driver.SafeDriveBTW', on_delete=models.CASCADE, null=False)
 
     sufficient_space_to_pass = models.IntegerField(_('Sufficient Space to Pass'), choices=NUMBER_CHOICES, default=0, )
     signals_property = models.IntegerField(_('Signals Property'), choices=NUMBER_CHOICES, default=0, )
@@ -677,53 +781,12 @@ class BTWPassingBus(models.Model):
 
     class Meta:
         ordering = ('-created',)
-        verbose_name = "BTW - Passing Bus"
+        verbose_name = "BTW - Passing"
 
 
-# 17. Railroad Crossing BTW Bus
-class BTWRailroadCrossingBus(models.Model):
-    btw = models.OneToOneField('safe_driver.BTWBus', on_delete=models.CASCADE, null=False,
-                               related_name='btw_railroad_crossing_bus')
-
-    signal_and_activate_4_ways = models.IntegerField(_('Signal & Activate 4-ways'), choices=NUMBER_CHOICES, default=0, )
-    stop_prior = models.IntegerField(_('Stop 10’ to 50’ prior'), choices=NUMBER_CHOICES, default=0, )
-    open_window_and_door = models.IntegerField(_('Open window & door'), choices=NUMBER_CHOICES, default=0, )
-    look_listen_clear = models.IntegerField(_('Look, Listen & Clear'), choices=NUMBER_CHOICES, default=0, )
-    signal_and_merge_into_traffic = models.IntegerField(_('Signal & merge into traffic'), choices=NUMBER_CHOICES,
-                                                        default=0, )
-
-    notes = models.TextField(_('Notes'), null=True, blank=True)
-    created = models.DateTimeField(auto_now_add=True)
-    updated = models.DateTimeField(auto_now=True)
-
-    def __unicode__(self):
-        return '%s' % self.pk
-
-    @property
-    def possible_points(self):
-        points = 5 * 5
-        return points
-
-    @property
-    def points_received(self):
-        points = self.signal_and_activate_4_ways + self.stop_prior + self.open_window_and_door + \
-                 self.look_listen_clear + self.signal_and_merge_into_traffic
-        return points
-
-    @property
-    def percent_effective(self):
-        percent = (self.points_received / self.possible_points) * 100
-        return '%s' % percent
-
-    class Meta:
-        ordering = ('-created',)
-        verbose_name = "BTW - Railroad Crossing Bus"
-
-
-# 18. General Safety and DOT adherence
-class BTWGeneralSafetyAndDOTAdherenceBus(models.Model):
-    btw = models.OneToOneField('safe_driver.BTWBus', on_delete=models.CASCADE, null=False,
-                               related_name='btw_general_safety_bus')
+# 20. General Safety and DOT adherence
+class BTWGeneralSafetyAndDOTAdherence(models.Model):
+    btw = models.OneToOneField('safe_driver.SafeDriveBTW', on_delete=models.CASCADE, null=False)
 
     avoids_crowding_effect = models.IntegerField(_('Avoids crowding effect'), choices=NUMBER_CHOICES, default=0, )
     stays_right_or_correct_lane = models.IntegerField(_('Stays to the right/correct lane'), choices=NUMBER_CHOICES,
@@ -773,46 +836,4 @@ class BTWGeneralSafetyAndDOTAdherenceBus(models.Model):
 
     class Meta:
         ordering = ('-created',)
-        verbose_name = "BTW - General Safety and DOT adherence - Bus"
-
-
-# 19. Internal Environtment -  BTW Bus
-class BTWInternalEnvironmentBus(models.Model):
-    btw = models.OneToOneField('safe_driver.BTWBus', on_delete=models.CASCADE, null=False,
-                               related_name='btw_internal_environment_bus')
-
-    driver_aid = models.IntegerField(_('Driver Aid'), choices=NUMBER_CHOICES, default=0, )
-    interior_passenger_mirror_check = models.IntegerField(_('Interior Passenger Mirror Check'),
-                                                          choices=NUMBER_CHOICES, default=0, )
-    safe_path = models.IntegerField(_('Safe Path'), choices=NUMBER_CHOICES, default=0, )
-    maintain_proper_grip = models.IntegerField(_('Maintain Proper Grip'), choices=NUMBER_CHOICES, default=0, )
-    smooth_driving_movements = models.IntegerField(_('Smooth Driving Movements'), choices=NUMBER_CHOICES, default=0, )
-    maintain_comfortable_environment = models.IntegerField(_('Maintain a Comfortable Environment'),
-                                                           choices=NUMBER_CHOICES, default=0, )
-
-    notes = models.TextField(_('Notes'), null=True, blank=True)
-    created = models.DateTimeField(auto_now_add=True)
-    updated = models.DateTimeField(auto_now=True)
-
-    def __unicode__(self):
-        return '%s' % self.pk
-
-    @property
-    def possible_points(self):
-        points = 5 * 6
-        return points
-
-    @property
-    def points_received(self):
-        points = self.driver_aid + self.interior_passenger_mirror_check + self.safe_path + \
-                 self.maintain_proper_grip + self.smooth_driving_movements + self.maintain_comfortable_environment
-        return points
-
-    @property
-    def percent_effective(self):
-        percent = (self.points_received / self.possible_points) * 100
-        return '%s' % percent
-
-    class Meta:
-        ordering = ('-created',)
-        verbose_name = "BTW - Internal Environtment - Bus"
+        verbose_name = "BTW - General Safety and DOT adherence"
